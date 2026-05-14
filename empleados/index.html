@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Empleados · MiProyecto</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <a class="logo" href="../index.html">← Seguridad LTDA</a>
+    <span class="header-title">Empleados</span>
+    <button class="btn-primary" id="btn-nuevo">+ Nuevo empleado</button>
+  </header>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- PAGE TITLE -->
+    <section class="page-hero">
+      <span class="hero-tag">Sprint 1 · Módulo</span>
+      <h1>Gestión de <em>Empleados</em></h1>
+      <p>Administra el equipo: crea, edita o elimina registros desde esta vista.</p>
+    </section>
+
+    <!-- SEARCH + STATS -->
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="search" placeholder="Buscar por nombre, cargo o área…" />
+      </div>
+      <div class="stats">
+        <span id="count">0</span> empleados
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <table id="tabla">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nombre</th>
+            <th>Cargo</th>
+            <th>Área</th>
+            <th>Email</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="empty-state" id="empty">
+        <span>👥</span>
+        <p>No hay empleados aún.<br>Crea el primero con el botón de arriba.</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL -->
+  <div class="overlay" id="overlay">
+    <div class="modal" id="modal">
+      <div class="modal-header">
+        <h2 id="modal-title">Nuevo empleado</h2>
+        <button class="close-btn" id="btn-cerrar">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nombre *</label>
+            <input type="text" id="f-nombre" placeholder="Ej: Ana García" />
+          </div>
+          <div class="form-group">
+            <label>Apellido *</label>
+            <input type="text" id="f-apellido" placeholder="Ej: López" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Cargo *</label>
+            <input type="text" id="f-cargo" placeholder="Ej: Desarrollador Frontend" />
+          </div>
+          <div class="form-group">
+            <label>Área</label>
+            <select id="f-area">
+              <option value="">Seleccionar…</option>
+              <option>Tecnología</option>
+              <option>Recursos Humanos</option>
+              <option>Marketing</option>
+              <option>Finanzas</option>
+              <option>Operaciones</option>
+              <option>Ventas</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" id="f-email" placeholder="ana@empresa.com" />
+          </div>
+          <div class="form-group">
+            <label>Estado</label>
+            <select id="f-estado">
+              <option value="Activo">Activo</option>
+              <option value="Inactivo">Inactivo</option>
+            </select>
+          </div>
+        </div>
+        <p class="form-note">* Campos obligatorios</p>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-ghost" id="btn-cancelar">Cancelar</button>
+        <button class="btn-primary" id="btn-guardar">Guardar empleado</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ── DATA ── */
+    let empleados = [
+      { id: 1, nombre: 'Carlos', apellido: 'Mendoza', cargo: 'Tech Lead', area: 'Tecnología', email: 'carlos@empresa.com', estado: 'Activo' },
+      { id: 2, nombre: 'Sofía',  apellido: 'Reyes',   cargo: 'Diseñadora UX', area: 'Marketing', email: 'sofia@empresa.com', estado: 'Activo' },
+      { id: 3, nombre: 'Tomás',  apellido: 'Herrera', cargo: 'Analista',  area: 'Finanzas', email: 'tomas@empresa.com', estado: 'Inactivo' },
+    ];
+    let nextId = 4;
+    let editingId = null;
+
+    /* ── REFS ── */
+    const tbody    = document.getElementById('tbody');
+    const overlay  = document.getElementById('overlay');
+    const empty    = document.getElementById('empty');
+    const countEl  = document.getElementById('count');
+    const search   = document.getElementById('search');
+    const modalTitle = document.getElementById('modal-title');
+    const btnGuardar = document.getElementById('btn-guardar');
+
+    /* ── RENDER ── */
+    function render(list) {
+      const q = search.value.toLowerCase();
+      const filtered = list.filter(e =>
+        `${e.nombre} ${e.apellido} ${e.cargo} ${e.area}`.toLowerCase().includes(q)
+      );
+
+      countEl.textContent = filtered.length;
+      empty.style.display = filtered.length === 0 ? 'flex' : 'none';
+
+      tbody.innerHTML = filtered.map((e, i) => `
+        <tr style="animation-delay:${i * 0.04}s">
+          <td class="td-num">${e.id}</td>
+          <td class="td-name">
+            <div class="avatar">${e.nombre[0]}${e.apellido[0]}</div>
+            <span>${e.nombre} ${e.apellido}</span>
+          </td>
+          <td>${e.cargo}</td>
+          <td><span class="badge-area">${e.area || '—'}</span></td>
+          <td class="td-email">${e.email}</td>
+          <td><span class="badge-estado ${e.estado === 'Activo' ? 'activo' : 'inactivo'}">${e.estado}</span></td>
+          <td class="td-actions">
+            <button class="action-btn edit" onclick="abrirEditar(${e.id})" title="Editar">✎</button>
+            <button class="action-btn del"  onclick="eliminar(${e.id})"    title="Eliminar">⌫</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    /* ── MODAL ── */
+    function abrirModal() {
+      overlay.classList.add('show');
+      document.getElementById('f-nombre').focus();
+    }
+
+    function cerrarModal() {
+      overlay.classList.remove('show');
+      limpiarForm();
+      editingId = null;
+    }
+
+    function limpiarForm() {
+      ['f-nombre','f-apellido','f-cargo','f-email'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('f-area').value   = '';
+      document.getElementById('f-estado').value = 'Activo';
+    }
+
+    function abrirEditar(id) {
+      const e = empleados.find(x => x.id === id);
+      if (!e) return;
+      editingId = id;
+      modalTitle.textContent = 'Editar empleado';
+      btnGuardar.textContent  = 'Guardar cambios';
+      document.getElementById('f-nombre').value   = e.nombre;
+      document.getElementById('f-apellido').value = e.apellido;
+      document.getElementById('f-cargo').value    = e.cargo;
+      document.getElementById('f-area').value     = e.area;
+      document.getElementById('f-email').value    = e.email;
+      document.getElementById('f-estado').value   = e.estado;
+      abrirModal();
+    }
+
+    function guardar() {
+      const nombre   = document.getElementById('f-nombre').value.trim();
+      const apellido = document.getElementById('f-apellido').value.trim();
+      const cargo    = document.getElementById('f-cargo').value.trim();
+      const email    = document.getElementById('f-email').value.trim();
+      const area     = document.getElementById('f-area').value;
+      const estado   = document.getElementById('f-estado').value;
+
+      if (!nombre || !apellido || !cargo || !email) {
+        sacudirModal(); return;
+      }
+
+      if (editingId) {
+        const idx = empleados.findIndex(x => x.id === editingId);
+        empleados[idx] = { ...empleados[idx], nombre, apellido, cargo, area, email, estado };
+      } else {
+        empleados.push({ id: nextId++, nombre, apellido, cargo, area, email, estado });
+      }
+
+      cerrarModal();
+      render(empleados);
+    }
+
+    function eliminar(id) {
+      if (!confirm('¿Eliminar este empleado?')) return;
+      empleados = empleados.filter(e => e.id !== id);
+      render(empleados);
+    }
+
+    function sacudirModal() {
+      const m = document.getElementById('modal');
+      m.classList.add('shake');
+      setTimeout(() => m.classList.remove('shake'), 400);
+    }
+
+    /* ── EVENTS ── */
+    document.getElementById('btn-nuevo').onclick   = () => { editingId = null; modalTitle.textContent = 'Nuevo empleado'; btnGuardar.textContent = 'Guardar empleado'; limpiarForm(); abrirModal(); };
+    document.getElementById('btn-cerrar').onclick  = cerrarModal;
+    document.getElementById('btn-cancelar').onclick = cerrarModal;
+    document.getElementById('btn-guardar').onclick  = guardar;
+    overlay.addEventListener('click', e => { if (e.target === overlay) cerrarModal(); });
+    search.addEventListener('input', () => render(empleados));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModal(); });
+
+    /* ── INIT ── */
+    render(empleados);
+  </script>
+</body>
+</html>
