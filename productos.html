@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Inventario - Crear Producto</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-bottom: none;
+        }
+        
+        .card-header h2 {
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .card-header p {
+            margin: 10px 0 0;
+            opacity: 0.9;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .required:after {
+            content: " *";
+            color: #dc3545;
+        }
+        
+        .form-control, .form-select {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 10px 12px;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .photo-upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+        
+        .photo-upload-area:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .photo-preview {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        
+        .photo-preview-item {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .photo-preview-item img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 2px solid #dee2e6;
+        }
+        
+        .remove-photo {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .remove-photo:hover {
+            transform: scale(1.1);
+        }
+        
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px 30px;
+            font-weight: 600;
+            font-size: 16px;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-submit:disabled {
+            opacity: 0.6;
+            transform: none;
+        }
+        
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .info-badge {
+            background: #e7f3ff;
+            color: #0066cc;
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+                <!-- Tarjeta principal -->
+                <div class="card animate__animated animate__fadeInUp">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-box-seam fs-1 me-3"></i>
+                            <div>
+                                <h2 class="mb-0">Crear Nuevo Producto</h2>
+                                <p class="mb-0">Complete el formulario para agregar un producto al inventario</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body p-4">
+                        <!-- Formulario -->
+                        <form id="productForm">
+                            <!-- Información básica -->
+                            <div class="mb-4">
+                                <h5 class="mb-3">
+                                    <i class="bi bi-info-circle-fill text-primary me-2"></i>
+                                    Información Básica
+                                </h5>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label required">Nombre del producto</label>
+                                        <input type="text" class="form-control" id="productName" 
+                                               placeholder="Ej: Laptop Gamer XT-1000" required>
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label required">SKU</label>
+                                        <input type="text" class="form-control" id="sku" 
+                                               placeholder="Código único del producto" required>
+                                        <small class="text-muted">Identificador único del producto</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label required">Precio</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" id="price" 
+                                                   step="0.01" placeholder="0.00" required>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Stock inicial</label>
+                                        <input type="number" class="form-control" id="stock" 
+                                               value="0" placeholder="Cantidad">
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Descripción</label>
+                                    <textarea class="form-control" id="description" rows="3" 
+                                              placeholder="Descripción detallada del producto..."></textarea>
+                                </div>
+                            </div>
+                            
+                            <!-- Clasificación -->
+                            <div class="mb-4">
+                                <h5 class="mb-3">
+                                    <i class="bi bi-folder2-open-fill text-success me-2"></i>
+                                    Clasificación
+                                </h5>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label required">Grupo</label>
+                                        <select class="form-select" id="groupId" required>
+                                            <option value="">Seleccione un grupo</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label required">Subgrupo</label>
+                                        <select class="form-select" id="subgroupId" required disabled>
+                                            <option value="">Primero seleccione un grupo</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Multimedia -->
+                            <div class="mb-4">
+                                <h5 class="mb-3">
+                                    <i class="bi bi-image-fill text-info me-2"></i>
+                                    Multimedia
+                                </h5>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Fotos del producto</label>
+                                    <div class="photo-upload-area" id="photoUploadArea">
+                                        <i class="bi bi-cloud-upload fs-1 text-muted"></i>
+                                        <p class="mt-2 mb-0">Haz clic o arrastra imágenes aquí</p>
+                                        <small class="text-muted">Formatos: JPG, PNG, GIF (Máx. 5MB por imagen)</small>
+                                    </div>
+                                    <input type="file" id="photoInput" class="d-none" multiple accept="image/*">
+                                    <div id="photoPreview" class="photo-preview mt-3"></div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Ficha técnica</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-link"></i></span>
+                                        <input type="url" class="form-control" id="technicalSheet" 
+                                               placeholder="https://ejemplo.com/ficha-tecnica.pdf">
+                                    </div>
+                                    <small class="text-muted">URL del documento PDF o página con especificaciones</small>
+                                </div>
+                            </div>
+                            
+                            <!-- Botones -->
+                            <div class="d-flex gap-3 justify-content-end">
+                                <button type="button" class="btn btn-light" id="resetBtn">
+                                    <i class="bi bi-arrow-repeat"></i> Limpiar
+                                </button>
+                                <button type="submit" class="btn btn-submit text-white" id="submitBtn">
+                                    <i class="bi bi-check-lg"></i> Crear Producto
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast para notificaciones -->
+    <div class="toast-container">
+        <div id="notificationToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="5000">
+            <div class="toast-header">
+                <i class="bi bi-bell-fill me-2"></i>
+                <strong class="me-auto">Notificación</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toastMessage">
+                Mensaje de notificación
+            </div>
+        </div>
+    </div>
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        
+        const groupsData = [
+            { 
+                id: "group_1", 
+                name: "Electrónica", 
+                icon: "bi-laptop",
+                subgroups: [
+                    { id: "sub_1_1", name: "Computadoras" },
+                    { id: "sub_1_2", name: "Teléfonos" },
+                    { id: "sub_1_3", name: "Tablets" },
+                    { id: "sub_1_4", name: "Accesorios" }
+                ]
+            },
+            { 
+                id: "group_2", 
+                name: "Ropa", 
+                icon: "bi-tshirt",
+                subgroups: [
+                    { id: "sub_2_1", name: "Camisas" },
+                    { id: "sub_2_2", name: "Pantalones" },
+                    { id: "sub_2_3", name: "Zapatos" },
+                    { id: "sub_2_4", name: "Accesorios" }
+                ]
+            },
+            { 
+                id: "group_3", 
+                name: "Hogar", 
+                icon: "bi-house",
+                subgroups: [
+                    { id: "sub_3_1", name: "Muebles" },
+                    { id: "sub_3_2", name: "Electrodomésticos" },
+                    { id: "sub_3_3", name: "Decoración" },
+                    { id: "sub_3_4", name: "Textiles" }
+                ]
+            },
+            { 
+                id: "group_4", 
+                name: "Deportes", 
+                icon: "bi-bicycle",
+                subgroups: [
+                    { id: "sub_4_1", name: "Equipo" },
+                    { id: "sub_4_2", name: "Ropa deportiva" },
+                    { id: "sub_4_3", name: "Accesorios" }
+                ]
+            }
+        ];
+
+        let photoFiles = [];
+        let toast;
+
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            toast = new bootstrap.Toast(document.getElementById('notificationToast'));
+        });
+
+        
+        function loadGroups() {
+            const groupSelect = document.getElementById('groupId');
+            groupsData.forEach(group => {
+                const option = document.createElement('option');
+                option.value = group.id;
+                option.innerHTML = `<i class="${group.icon}"></i> ${group.name}`;
+                option.textContent = group.name;
+                groupSelect.appendChild(option);
+            });
+        }
+
+        
+        function loadSubgroups(groupId) {
+            const subgroupSelect = document.getElementById('subgroupId');
+            subgroupSelect.innerHTML = '<option value="">Seleccione un subgrupo</option>';
+            subgroupSelect.disabled = true;
+
+            if (!groupId) return;
+
+            const selectedGroup = groupsData.find(g => g.id === groupId);
+            if (selectedGroup && selectedGroup.subgroups) {
+                subgroupSelect.disabled = false;
+                selectedGroup.subgroups.forEach(subgroup => {
+                    const option = document.createElement('option');
+                    option.value = subgroup.id;
+                    option.textContent = subgroup.name;
+                    subgroupSelect.appendChild(option);
+                });
+            }
+        }
+
+        
+        function showNotification(message, type = 'success') {
+            const toastBody = document.getElementById('toastMessage');
+            const toastHeader = document.querySelector('#notificationToast .toast-header');
+            
+            if (type === 'success') {
+                toastHeader.style.background = '#d4edda';
+                toastHeader.style.color = '#155724';
+                toastBody.innerHTML = `<i class="bi bi-check-circle-fill text-success me-2"></i> ${message}`;
+            } else {
+                toastHeader.style.background = '#f8d7da';
+                toastHeader.style.color = '#721c24';
+                toastBody.innerHTML = `<i class="bi bi-exclamation-triangle-fill text-danger me-2"></i> ${message}`;
+            }
+            
+            toast.show();
+            
+            setTimeout(() => {
+                toastHeader.style.background = '';
+                toastHeader.style.color = '';
+            }, 5000);
+        }
+
+        
+        function handlePhotoUpload(event) {
+            const files = Array.from(event.target.files);
+            const preview = document.getElementById('photoPreview');
+            
+            files.forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    if (file.size > 5 * 1024 * 1024) {
+                        showNotification(`La imagen ${file.name} excede 5MB`, 'error');
+                        return;
+                    }
+                    
+                    photoFiles.push(file);
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const photoDiv = document.createElement('div');
+                        photoDiv.className = 'photo-preview-item';
+                        photoDiv.innerHTML = `
+                            <img src="${e.target.result}" alt="Vista previa">
+                            <div class="remove-photo" onclick="removePhoto(${photoFiles.length - 1})">
+                                <i class="bi bi-x"></i>
+                            </div>
+                        `;
+                        preview.appendChild(photoDiv);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        
+        window.removePhoto = function(index) {
+            photoFiles.splice(index, 1);
+            refreshPhotoPreview();
+        };
+
+        
+        function refreshPhotoPreview() {
+            const preview = document.getElementById('photoPreview');
+            preview.innerHTML = '';
+            
+            photoFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const photoDiv = document.createElement('div');
+                    photoDiv.className = 'photo-preview-item';
+                    photoDiv.innerHTML = `
+                        <img src="${e.target.result}" alt="Vista previa">
+                        <div class="remove-photo" onclick="removePhoto(${index})">
+                            <i class="bi bi-x"></i>
+                        </div>
+                    `;
+                    preview.appendChild(photoDiv);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        
+        async function createProduct(productData) {
+            
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    
+                    if (productData.sku === 'DUPLICADO') {
+                        reject({ error: 'Ya existe un producto con este SKU' });
+                        return;
+                    }
+                    
+                    console.log('📦 Producto creado:', productData);
+                    resolve({
+                        success: true,
+                        message: 'Producto creado exitosamente',
+                        product: { ...productData, id: Date.now(), createdAt: new Date().toISOString() }
+                    });
+                }, 2000);
+            });
+        }
+
+        
+        document.getElementById('productForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const originalHtml = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Creando Producto <span class="loading-spinner"></span>';
+            submitBtn.disabled = true;
+
+            try {
+                
+                const name = document.getElementById('productName').value.trim();
+                const sku = document.getElementById('sku').value.trim();
+                const price = document.getElementById('price').value;
+                const groupId = document.getElementById('groupId').value;
+                const subgroupId = document.getElementById('subgroupId').value;
+
+                if (!name || !sku || !price || !groupId || !subgroupId) {
+                    throw new Error('Por favor complete todos los campos requeridos');
+                }
+
+                if (parseFloat(price) < 0) {
+                    throw new Error('El precio no puede ser negativo');
+                }
+
+                
+                const productData = {
+                    name: name,
+                    sku: sku,
+                    price: parseFloat(price),
+                    stock: parseInt(document.getElementById('stock').value) || 0,
+                    groupId: groupId,
+                    subgroupId: subgroupId,
+                    description: document.getElementById('description').value.trim(),
+                    technicalSheet: document.getElementById('technicalSheet').value.trim(),
+                    photos: photoFiles.map(file => ({
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                        url: URL.createObjectURL(file) 
+                    })),
+                    history: [{
+                        action: 'Producto creado',
+                        date: new Date().toISOString(),
+                        userId: 'usuario_actual'
+                    }]
+                };
+
+                
+                const result = await createProduct(productData);
+                
+                if (result.success) {
+                    showNotification('✅ ' + result.message, 'success');
+                    
+                    
+                    document.getElementById('productForm').reset();
+                    document.getElementById('photoPreview').innerHTML = '';
+                    document.getElementById('subgroupId').disabled = true;
+                    photoFiles = [];
+                    
+                    
+                    console.log('🎉 Producto registrado:', result.product);
+                    
+                    
+                    setTimeout(() => {
+                        showNotification(`Producto ${result.product.name} (SKU: ${result.product.sku}) agregado al inventario`, 'success');
+                    }, 1000);
+                }
+            } catch (error) {
+                showNotification('❌ Error: ' + error.message, 'error');
+            } finally {
+                submitBtn.innerHTML = originalHtml;
+                submitBtn.disabled = false;
+            }
+        });
+
+        
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            if (confirm('¿Estás seguro de que deseas limpiar el formulario?')) {
+                document.getElementById('productForm').reset();
+                document.getElementById('photoPreview').innerHTML = '';
+                document.getElementById('subgroupId').disabled = true;
+                photoFiles = [];
+                showNotification('Formulario limpiado', 'success');
+            }
+        });
+
+        
+        const uploadArea = document.getElementById('photoUploadArea');
+        uploadArea.addEventListener('click', () => document.getElementById('photoInput').click());
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#667eea';
+            uploadArea.style.background = '#f8f9ff';
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = '#dee2e6';
+            uploadArea.style.background = '#f8f9fa';
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#dee2e6';
+            uploadArea.style.background = '#f8f9fa';
+            const files = Array.from(e.dataTransfer.files);
+            document.getElementById('photoInput').files = e.dataTransfer.files;
+            handlePhotoUpload({ target: { files: files } });
+        });
+
+        
+        document.getElementById('groupId').addEventListener('change', (e) => {
+            loadSubgroups(e.target.value);
+        });
+        document.getElementById('photoInput').addEventListener('change', handlePhotoUpload);
+
+        
+        document.getElementById('price').addEventListener('input', function() {
+            if (this.value < 0) this.value = 0;
+        });
+        
+        document.getElementById('stock').addEventListener('input', function() {
+            if (this.value < 0) this.value = 0;
+        });
+
+        
+        loadGroups();
+        
+        
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    </script>
+</body>
+</html>
